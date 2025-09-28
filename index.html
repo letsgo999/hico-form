@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>APEC 2024 부대행사 | 한국 전통문화 공연 사전신청</title>
+    <meta name="description" content="APEC 정상회의 부대행사로 펼쳐지는 한국 전통무용 공연과 K-Pop 아이돌 공연 사전신청 페이지">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
+    
+    <style>
+        body {
+            font-family: 'Noto Sans KR', 'Inter', sans-serif;
+        }
+        
+        .hero-bg {
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.5) 0%, rgba(147, 51, 234, 0.4) 100%), 
+                        url('images/hico-building.jpg') center/cover no-repeat;
+            min-height: 100vh;
+        }
+        
+        .glass-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .gradient-text {
+            background: linear-gradient(135deg, #3B82F6 0%, #9333EA 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .performance-card {
+            transition: all 0.3s ease;
+            transform: translateY(0);
+        }
+        
+        .performance-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #3B82F6 0%, #9333EA 100%);
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(59, 130, 246, 0.3);
+        }
+        
+        .floating-element {
+            animation: float 6s ease-in-out infinite;
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-20px); }
+        }
+        
+        .fade-in {
+            animation: fadeIn 1s ease-out;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+        }
+        
+        .modal.show {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .modal-content {
+            background: white;
+            border-radius: 16px;
+            max-width: 500px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- Hero Section -->
+    <section class="hero-bg flex items-center justify-center relative overflow-hidden">
+        <!-- Floating Elements -->
+        <div class="absolute top-20 left-10 floating-element opacity-20">
+            <i class="fas fa-music text-white text-4xl"></i>
+        </div>
+        <div class="absolute bottom-32 right-16 floating-element opacity-20" style="animation-delay: 2s;">
+            <i class="fas fa-theater-masks text-white text-5xl"></i>
+        </div>
+        <div class="absolute top-1/3 right-1/4 floating-element opacity-20" style="animation-delay: 4s;">
+            <i class="fas fa-star text-yellow-300 text-3xl"></i>
+        </div>
+        
+        <div class="container mx-auto px-6 text-center relative z-10">
+            <!-- APEC Logo Area -->
+            <div class="fade-in mb-8">
+                <div class="inline-flex items-center bg-white/20 backdrop-blur-md rounded-full px-6 py-3 mb-6">
+                    <i class="fas fa-globe-asia text-white mr-3 text-2xl"></i>
+                    <span class="text-white font-semibold text-lg">APEC 2025 SUMMIT</span>
+                </div>
+            </div>
+            
+            <!-- Main Title -->
+            <h1 class="text-5xl md:text-7xl font-bold text-white mb-6 leading-tight fade-in">
+                한국의 아름다운<br>
+                <span class="gradient-text bg-gradient-to-r from-yellow-300 to-pink-300 bg-clip-text text-transparent">
+                    문화를 만나다
+                </span>
+            </h1>
+            
+            <!-- Subtitle -->
+            <p class="text-xl md:text-2xl text-white/90 mb-8 max-w-3xl mx-auto leading-relaxed fade-in">
+                2025년 10월 27일 (월) - 11월 1일 (토)<br>
+                APEC 정상회의 기간 중 펼쳐지는 특별한 한국 문화 공연
+            </p>
+            
+            <!-- CTA Buttons -->
+            <div class="flex flex-col sm:flex-row gap-4 justify-center items-center fade-in">
+                <button onclick="scrollToPerformances()" class="btn-primary text-white px-8 py-4 rounded-full text-lg font-semibold hover:scale-105 transition-all duration-300">
+                    <i class="fas fa-ticket-alt mr-2"></i>
+                    지금 신청하기
+                </button>
+                <button onclick="scrollToInfo()" class="bg-white/20 backdrop-blur-md text-white px-8 py-4 rounded-full text-lg font-semibold hover:bg-white/30 transition-all duration-300">
+                    <i class="fas fa-info-circle mr-2"></i>
+                    자세히 보기
+                </button>
+            </div>
+            
+            <!-- Event Info Bar -->
+            <div class="mt-12 glass-card rounded-2xl p-6 max-w-4xl mx-auto fade-in">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 text-center">
+                    <div class="flex items-center justify-center space-x-3">
+                        <i class="fas fa-calendar-alt text-blue-600 text-xl"></i>
+                        <div>
+                            <p class="font-semibold text-gray-800">행사 기간</p>
+                            <p class="text-gray-600">10.27 - 11.01</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center justify-center space-x-3">
+                        <i class="fas fa-map-marker-alt text-red-500 text-xl"></i>
+                        <div>
+                            <p class="font-semibold text-gray-800">장소</p>
+                            <p class="text-gray-600">HICO</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center justify-center space-x-3">
+                        <i class="fas fa-gift text-green-600 text-xl"></i>
+                        <div>
+                            <p class="font-semibold text-gray-800">참가비</p>
+                            <p class="text-gray-600">무료</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Performance Section -->
+    <section id="performances" class="py-20 bg-gray-50">
+        <div class="container mx-auto px-6">
+            <!-- Section Header -->
+            <div class="text-center mb-16">
+                <h2 class="text-4xl md:text-5xl font-bold gradient-text mb-6">
+                    특별 공연 프로그램
+                </h2>
+                <p class="text-xl text-gray-600 max-w-3xl mx-auto">
+                    한국의 전통미와 현대적 매력이 어우러진 두 가지 특별한 공연을 준비했습니다
+                </p>
+            </div>
+
+            <!-- Performance Cards -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 max-w-6xl mx-auto">
+                <!-- 한국 전통무용 카드 -->
+                <div class="performance-card glass-card rounded-3xl overflow-hidden shadow-lg">
+                    <div class="bg-gradient-to-br from-red-500 to-pink-600 p-8 text-white text-center">
+                        <i class="fas fa-fan text-6xl mb-4 opacity-80"></i>
+                        <h3 class="text-3xl font-bold mb-2">한국 전통무용</h3>
+                        <p class="text-lg opacity-90">Korean Traditional Dance</p>
+                    </div>
+                    
+                    <div class="p-8">
+                        <div class="mb-6">
+                            <div class="flex items-center mb-4 text-gray-700">
+                                <i class="fas fa-clock text-red-500 mr-3"></i>
+                                <span class="font-semibold">10월 29일 (수) 오후 7:00 - 8:30</span>
+                            </div>
+                            <div class="flex items-center mb-4 text-gray-700">
+                                <i class="fas fa-users text-red-500 mr-3"></i>
+                                <span>정원 200명</span>
+                            </div>
+                            <div class="flex items-center text-gray-700">
+                                <i class="fas fa-language text-red-500 mr-3"></i>
+                                <span>한/영 동시통역 제공</span>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-red-50 rounded-2xl p-6 mb-6">
+                            <h4 class="font-bold text-gray-800 mb-3">공연 내용</h4>
+                            <ul class="text-gray-700 space-y-2">
+                                <li class="flex items-start">
+                                    <i class="fas fa-star text-red-400 mr-2 mt-1 text-sm"></i>
+                                    <span>부채춤, 검무 등 전통 궁중무용</span>
+                                </li>
+                                <li class="flex items-start">
+                                    <i class="fas fa-star text-red-400 mr-2 mt-1 text-sm"></i>
+                                    <span>한복 패션쇼와 전통 악기 연주</span>
+                                </li>
+                                <li class="flex items-start">
+                                    <i class="fas fa-star text-red-400 mr-2 mt-1 text-sm"></i>
+                                    <span>관객 참여 체험 프로그램</span>
+                                </li>
+                            </ul>
+                        </div>
+                        
+                        <button onclick="window.location.href='traditional-dance.html'" class="w-full bg-gradient-to-r from-red-500 to-pink-600 text-white py-4 rounded-full text-lg font-semibold hover:scale-105 transition-all duration-300">
+                            <i class="fas fa-ticket-alt mr-2"></i>
+                            전통무용 신청하기
+                        </button>
+                    </div>
+                </div>
+
+                <!-- K-Pop 아이돌 카드 -->
+                <div class="performance-card glass-card rounded-3xl overflow-hidden shadow-lg">
+                    <div class="bg-gradient-to-br from-purple-500 to-indigo-600 p-8 text-white text-center">
+                        <i class="fas fa-microphone-alt text-6xl mb-4 opacity-80"></i>
+                        <h3 class="text-3xl font-bold mb-2">K-Pop 아이돌 공연</h3>
+                        <p class="text-lg opacity-90">K-Pop Idol Performance</p>
+                    </div>
+                    
+                    <div class="p-8">
+                        <div class="mb-6">
+                            <div class="flex items-center mb-4 text-gray-700">
+                                <i class="fas fa-clock text-purple-500 mr-3"></i>
+                                <span class="font-semibold">10월 30일 (목) 오후 8:00 - 9:30</span>
+                            </div>
+                            <div class="flex items-center mb-4 text-gray-700">
+                                <i class="fas fa-users text-purple-500 mr-3"></i>
+                                <span>정원 300명</span>
+                            </div>
+                            <div class="flex items-center text-gray-700">
+                                <i class="fas fa-trophy text-purple-500 mr-3"></i>
+                                <span>글로벌 히트곡 특별 무대</span>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-purple-50 rounded-2xl p-6 mb-6">
+                            <h4 class="font-bold text-gray-800 mb-3">공연 내용</h4>
+                            <ul class="text-gray-700 space-y-2">
+                                <li class="flex items-start">
+                                    <i class="fas fa-star text-purple-400 mr-2 mt-1 text-sm"></i>
+                                    <span>인기 K-Pop 그룹 특별 무대</span>
+                                </li>
+                                <li class="flex items-start">
+                                    <i class="fas fa-star text-purple-400 mr-2 mt-1 text-sm"></i>
+                                    <span>글로벌 히트곡 라이브 공연</span>
+                                </li>
+                                <li class="flex items-start">
+                                    <i class="fas fa-star text-purple-400 mr-2 mt-1 text-sm"></i>
+                                    <span>팬미팅 및 사진 촬영 시간</span>
+                                </li>
+                            </ul>
+                        </div>
+                        
+                        <button onclick="window.location.href='kpop-concert.html'" class="w-full bg-gradient-to-r from-purple-500 to-indigo-600 text-white py-4 rounded-full text-lg font-semibold hover:scale-105 transition-all duration-300">
+                            <i class="fas fa-ticket-alt mr-2"></i>
+                            K-Pop 공연 신청하기
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Info Section -->
+    <section id="info" class="py-20 bg-white">
+        <div class="container mx-auto px-6">
+            <div class="max-w-4xl mx-auto">
+                <h2 class="text-4xl font-bold text-center gradient-text mb-12">
+                    신청 안내사항
+                </h2>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div class="bg-blue-50 rounded-2xl p-8">
+                        <i class="fas fa-info-circle text-blue-600 text-3xl mb-4"></i>
+                        <h3 class="text-xl font-bold text-gray-800 mb-4">신청 방법</h3>
+                        <ul class="text-gray-700 space-y-2">
+                            <li class="flex items-start">
+                                <i class="fas fa-check text-blue-500 mr-2 mt-1 text-sm"></i>
+                                <span>온라인 사전 신청 필수</span>
+                            </li>
+                            <li class="flex items-start">
+                                <i class="fas fa-check text-blue-500 mr-2 mt-1 text-sm"></i>
+                                <span>신분증 지참 필수</span>
+                            </li>
+                            <li class="flex items-start">
+                                <i class="fas fa-check text-blue-500 mr-2 mt-1 text-sm"></i>
+                                <span>선착순 마감</span>
+                            </li>
+                        </ul>
+                    </div>
+                    
+                    <div class="bg-green-50 rounded-2xl p-8">
+                        <i class="fas fa-calendar-check text-green-600 text-3xl mb-4"></i>
+                        <h3 class="text-xl font-bold text-gray-800 mb-4">중요 일정</h3>
+                        <ul class="text-gray-700 space-y-2">
+                            <li class="flex items-start">
+                                <i class="fas fa-arrow-right text-green-500 mr-2 mt-1 text-sm"></i>
+                                <span>신청 마감: 10월 26일 (일) 23:59</span>
+                            </li>
+                            <li class="flex items-start">
+                                <i class="fas fa-arrow-right text-green-500 mr-2 mt-1 text-sm"></i>
+                                <span>당첨 발표: 10월 27일 (월) 09:00</span>
+                            </li>
+                            <li class="flex items-start">
+                                <i class="fas fa-arrow-right text-green-500 mr-2 mt-1 text-sm"></i>
+                                <span>현장 입장: 공연 1시간 전부터</span>
+                            </li>
+                        </ul>
+                    </div>
+                    
+                    <div class="bg-yellow-50 rounded-2xl p-8">
+                        <i class="fas fa-map-marker-alt text-yellow-600 text-3xl mb-4"></i>
+                        <h3 class="text-xl font-bold text-gray-800 mb-4">오시는 길</h3>
+                        <ul class="text-gray-700 space-y-2">
+                            <li class="flex items-start">
+                                <i class="fas fa-subway text-yellow-500 mr-2 mt-1 text-sm"></i>
+                                <span>지하철 2호선 강남역 3번 출구</span>
+                            </li>
+                            <li class="flex items-start">
+                                <i class="fas fa-bus text-yellow-500 mr-2 mt-1 text-sm"></i>
+                                <span>버스 146, 740, 6411</span>
+                            </li>
+                            <li class="flex items-start">
+                                <i class="fas fa-car text-yellow-500 mr-2 mt-1 text-sm"></i>
+                                <span>주차장 이용 가능 (유료)</span>
+                            </li>
+                        </ul>
+                    </div>
+                    
+                    <div class="bg-red-50 rounded-2xl p-8">
+                        <i class="fas fa-exclamation-triangle text-red-600 text-3xl mb-4"></i>
+                        <h3 class="text-xl font-bold text-gray-800 mb-4">주의사항</h3>
+                        <ul class="text-gray-700 space-y-2">
+                            <li class="flex items-start">
+                                <i class="fas fa-times text-red-500 mr-2 mt-1 text-sm"></i>
+                                <span>공연장 내 촬영 금지</span>
+                            </li>
+                            <li class="flex items-start">
+                                <i class="fas fa-times text-red-500 mr-2 mt-1 text-sm"></i>
+                                <span>음식물 반입 금지</span>
+                            </li>
+                            <li class="flex items-start">
+                                <i class="fas fa-times text-red-500 mr-2 mt-1 text-sm"></i>
+                                <span>공연 중 입퇴장 제한</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Registration Modal -->
+    <div id="registrationModal" class="modal">
+        <div class="modal-content">
+            <div class="p-8">
+                <div class="flex items-center justify-between mb-6">
+                    <h3 id="modalTitle" class="text-2xl font-bold gradient-text"></h3>
+                    <button onclick="closeRegistrationModal()" class="text-gray-400 hover:text-gray-600 text-2xl">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                
+                <form id="registrationForm" onsubmit="submitRegistration(event)">
+                    <input type="hidden" id="performanceType" name="performanceType">
+                    
+                    <div class="space-y-6">
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">이름 *</label>
+                            <input type="text" id="name" name="name" required 
+                                   class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">이메일 *</label>
+                            <input type="email" id="email" name="email" required 
+                                   class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">전화번호 *</label>
+                            <input type="tel" id="phone" name="phone" required 
+                                   class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">국적</label>
+                            <select id="nationality" name="nationality" 
+                                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                <option value="KR">대한민국</option>
+                                <option value="US">미국</option>
+                                <option value="JP">일본</option>
+                                <option value="CN">중국</option>
+                                <option value="OTHER">기타</option>
+                            </select>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">동반 인원</label>
+                            <select id="companions" name="companions" 
+                                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                <option value="1">본인만</option>
+                                <option value="2">2명</option>
+                                <option value="3">3명</option>
+                                <option value="4">4명</option>
+                            </select>
+                        </div>
+                        
+                        <div>
+                            <label class="flex items-center">
+                                <input type="checkbox" id="agree" name="agree" required class="mr-3">
+                                <span class="text-sm text-gray-700">개인정보 수집 및 이용에 동의합니다</span>
+                            </label>
+                        </div>
+                        
+                        <button type="submit" class="w-full btn-primary text-white py-4 rounded-lg text-lg font-semibold">
+                            신청 완료
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-gray-900 text-white py-12">
+        <div class="container mx-auto px-6">
+            <div class="text-center">
+                <h3 class="text-2xl font-bold mb-4">APEC 2024 Korean Cultural Events</h3>
+                <p class="text-gray-400 mb-6">한국의 아름다운 문화를 세계와 함께 나누는 특별한 시간</p>
+                
+                <div class="flex justify-center space-x-6 mb-8">
+                    <a href="#" class="text-gray-400 hover:text-white transition-colors">
+                        <i class="fab fa-facebook-f text-xl"></i>
+                    </a>
+                    <a href="#" class="text-gray-400 hover:text-white transition-colors">
+                        <i class="fab fa-instagram text-xl"></i>
+                    </a>
+                    <a href="#" class="text-gray-400 hover:text-white transition-colors">
+                        <i class="fab fa-youtube text-xl"></i>
+                    </a>
+                </div>
+                
+                <p class="text-gray-500 text-sm">
+                    © 2025 APEC Summit Korea. All rights reserved. | 
+                    주최: 대한민국 정부 | 주관: HICO
+                </p>
+                
+                <!-- Admin Access (Hidden) -->
+                <div class="mt-4">
+                    <a href="admin-dashboard.html" class="text-gray-700 hover:text-gray-900 text-xs opacity-30 hover:opacity-100 transition-opacity">
+                        ⚙️
+                    </a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script src="js/main.js"></script>
+</body>
+</html>

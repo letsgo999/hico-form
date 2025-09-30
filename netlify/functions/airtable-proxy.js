@@ -6,7 +6,8 @@ exports.handler = async (event, context) => {
     const headers = {
         'Access-Control-Allow-Origin': '*',
         'Access-Control-Allow-Headers': 'Content-Type',
-        'Access-Control-Allow-Methods': 'GET, POST, OPTIONS'
+        'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+        'Content-Type': 'application/json'
     };
 
     // OPTIONS 요청 처리 (CORS preflight)
@@ -23,13 +24,23 @@ exports.handler = async (event, context) => {
     const AIRTABLE_BASE_ID = process.env.AIRTABLE_BASE_ID;
     const AIRTABLE_TABLE_NAME = process.env.AIRTABLE_TABLE_NAME || 'APEC_Applications';
 
+    console.log('🔧 환경변수 체크:');
+    console.log('- API Key 존재:', !!AIRTABLE_API_KEY);
+    console.log('- Base ID 존재:', !!AIRTABLE_BASE_ID);
+    console.log('- Table Name:', AIRTABLE_TABLE_NAME);
+
     // 설정 검증
     if (!AIRTABLE_API_KEY || !AIRTABLE_BASE_ID) {
         return {
             statusCode: 500,
             headers,
             body: JSON.stringify({
-                error: 'Airtable 설정이 완료되지 않았습니다. 환경변수를 확인하세요.'
+                error: 'Airtable 환경변수가 설정되지 않았습니다.',
+                details: {
+                    apiKey: !!AIRTABLE_API_KEY,
+                    baseId: !!AIRTABLE_BASE_ID,
+                    tableName: AIRTABLE_TABLE_NAME
+                }
             })
         };
     }
@@ -39,10 +50,23 @@ exports.handler = async (event, context) => {
     try {
         if (event.httpMethod === 'POST') {
             // 레코드 생성
-            const requestBody = JSON.parse(event.body);
+            let requestBody;
+            try {
+                requestBody = JSON.parse(event.body);
+            } catch (parseError) {
+                return {
+                    statusCode: 400,
+                    headers,
+                    body: JSON.stringify({
+                        error: 'Invalid JSON in request body',
+                        details: parseError.message
+                    })
+                };
+            }
             
             console.log('📝 Airtable 레코드 생성:', requestBody);
 
+            // Node.js fetch 사용 (Netlify에서 기본 제공)
             const response = await fetch(baseURL, {
                 method: 'POST',
                 headers: {
@@ -56,6 +80,8 @@ exports.handler = async (event, context) => {
                 })
             });
 
+            console.log('📡 Airtable 응답 상태:', response.status);
+
             if (!response.ok) {
                 const errorText = await response.text();
                 console.error('❌ Airtable API 에러:', errorText);
@@ -64,7 +90,9 @@ exports.handler = async (event, context) => {
                     statusCode: response.status,
                     headers,
                     body: JSON.stringify({
-                        error: `Airtable API Error: ${errorText}`
+                        error: `Airtable API Error: ${response.status}`,
+                        details: errorText,
+                        url: baseURL
                     })
                 };
             }
@@ -80,6 +108,8 @@ exports.handler = async (event, context) => {
 
         } else if (event.httpMethod === 'GET') {
             // 레코드 조회
+            console.log('📊 Airtable 레코드 조회 요청');
+
             const queryParams = new URLSearchParams();
             queryParams.append('sort[0][field]', 'Submitted At');
             queryParams.append('sort[0][direction]', 'desc');
@@ -93,16 +123,20 @@ exports.handler = async (event, context) => {
 
             if (!response.ok) {
                 const errorText = await response.text();
+                console.error('❌ Airtable 조회 에러:', errorText);
                 return {
                     statusCode: response.status,
                     headers,
                     body: JSON.stringify({
-                        error: `Airtable API Error: ${errorText}`
+                        error: `Airtable API Error: ${response.status}`,
+                        details: errorText
                     })
                 };
             }
 
             const result = await response.json();
+            console.log('✅ Airtable 조회 성공:', result.records.length, '개 레코드');
+
             return {
                 statusCode: 200,
                 headers,
@@ -123,7 +157,9 @@ exports.handler = async (event, context) => {
             statusCode: 500,
             headers,
             body: JSON.stringify({
-                error: 'Internal server error: ' + error.message
+                error: 'Internal server error',
+                details: error.message,
+                stack: error.stack
             })
         };
     }

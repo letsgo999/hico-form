@@ -1,0 +1,21 @@
+{
+  "name": "apec-cultural-events",
+  "version": "1.0.0",
+  "description": "APEC 2025 Korean Cultural Events Landing Page",
+  "main": "index.html",
+  "scripts": {
+    "dev": "netlify dev",
+    "build": "echo 'No build process needed'"
+  },
+  "keywords": [
+    "apec",
+    "cultural-events",
+    "airtable",
+    "netlify-functions"
+  ],
+  "author": "APEC Korea Team",
+  "license": "MIT",
+  "devDependencies": {
+    "netlify-cli": "^16.0.0"
+  }
+}

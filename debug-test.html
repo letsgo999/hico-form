@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🔧 APEC 시스템 디버그 테스트</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .log-success { color: #10B981; }
+        .log-error { color: #EF4444; }
+        .log-info { color: #3B82F6; }
+        .log-warning { color: #F59E0B; }
+    </style>
+</head>
+<body class="bg-gray-100 p-8">
+    <div class="max-w-4xl mx-auto">
+        <h1 class="text-3xl font-bold mb-8 text-center">🔧 APEC 시스템 디버그 테스트</h1>
+        
+        <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+            <h2 class="text-xl font-semibold mb-4">📊 시스템 상태 확인</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                <button onclick="testProxyEndpoint()" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
+                    🔗 프록시 엔드포인트 테스트
+                </button>
+                <button onclick="testAirtableConnection()" class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">
+                    📡 에어테이블 연결 테스트
+                </button>
+                <button onclick="testCreateRecord()" class="bg-purple-500 text-white px-4 py-2 rounded hover:bg-purple-600">
+                    📝 레코드 생성 테스트
+                </button>
+                <button onclick="clearLogs()" class="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600">
+                    🧹 로그 지우기
+                </button>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-lg p-6">
+            <h2 class="text-xl font-semibold mb-4">📋 테스트 로그</h2>
+            <div id="logContainer" class="bg-gray-900 text-green-400 p-4 rounded font-mono text-sm h-96 overflow-y-auto">
+                <div>🚀 APEC 시스템 디버그 시작...</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const PROXY_ENDPOINT = '/.netlify/functions/airtable-proxy';
+        
+        function log(message, type = 'info') {
+            const container = document.getElementById('logContainer');
+            const timestamp = new Date().toLocaleTimeString();
+            const logClass = type === 'error' ? 'log-error' : 
+                           type === 'success' ? 'log-success' : 
+                           type === 'warning' ? 'log-warning' : 'log-info';
+            
+            container.innerHTML += `<div class="${logClass}">[${timestamp}] ${message}</div>`;
+            container.scrollTop = container.scrollHeight;
+        }
+
+        function clearLogs() {
+            document.getElementById('logContainer').innerHTML = '<div>🧹 로그가 지워졌습니다.</div>';
+        }
+
+        async function testProxyEndpoint() {
+            log('🔗 프록시 엔드포인트 테스트 시작...', 'info');
+            
+            try {
+                // OPTIONS 요청 테스트 (CORS preflight)
+                const optionsResponse = await fetch(PROXY_ENDPOINT, {
+                    method: 'OPTIONS'
+                });
+                
+                log(`✅ CORS preflight: ${optionsResponse.status}`, 'success');
+                
+                // 프록시 함수 존재 여부 확인
+                if (optionsResponse.status === 200) {
+                    log('✅ 프록시 함수가 정상적으로 배포되었습니다.', 'success');
+                } else {
+                    log('❌ 프록시 함수에 문제가 있습니다.', 'error');
+                }
+                
+            } catch (error) {
+                log(`❌ 프록시 엔드포인트 에러: ${error.message}`, 'error');
+            }
+        }
+
+        async function testAirtableConnection() {
+            log('📡 에어테이블 연결 테스트 시작...', 'info');
+            
+            try {
+                const response = await fetch(PROXY_ENDPOINT, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                log(`📡 응답 상태: ${response.status} ${response.statusText}`, 'info');
+
+                if (response.ok) {
+                    const data = await response.json();
+                    log(`✅ 에어테이블 연결 성공! 기존 레코드 수: ${data.length}개`, 'success');
+                    log(`📊 첫 번째 레코드 예시: ${JSON.stringify(data[0] || {}, null, 2)}`, 'info');
+                } else {
+                    const errorData = await response.json();
+                    log(`❌ 에어테이블 연결 실패: ${JSON.stringify(errorData, null, 2)}`, 'error');
+                    
+                    if (response.status === 500) {
+                        log('💡 환경변수 설정을 확인하세요 (AIRTABLE_API_KEY, AIRTABLE_BASE_ID)', 'warning');
+                    }
+                }
+                
+            } catch (error) {
+                log(`❌ 연결 테스트 에러: ${error.message}`, 'error');
+            }
+        }
+
+        async function testCreateRecord() {
+            log('📝 레코드 생성 테스트 시작...', 'info');
+            
+            const testData = {
+                'Name': `테스트사용자_${Date.now()}`,
+                'Phone': '010-1234-5678',
+                'Email': 'debug@test.com',
+                'Performance Type': 'Traditional',
+                'Status': 'Pending',
+                'Submitted At': new Date().toISOString()
+            };
+
+            log(`📤 전송할 데이터: ${JSON.stringify(testData, null, 2)}`, 'info');
+            
+            try {
+                const response = await fetch(PROXY_ENDPOINT, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(testData)
+                });
+
+                log(`📡 생성 응답 상태: ${response.status} ${response.statusText}`, 'info');
+
+                if (response.ok) {
+                    const result = await response.json();
+                    log(`✅ 레코드 생성 성공! ID: ${result.id}`, 'success');
+                    log(`📋 생성된 레코드: ${JSON.stringify(result, null, 2)}`, 'success');
+                } else {
+                    const errorData = await response.json();
+                    log(`❌ 레코드 생성 실패: ${JSON.stringify(errorData, null, 2)}`, 'error');
+                }
+                
+            } catch (error) {
+                log(`❌ 생성 테스트 에러: ${error.message}`, 'error');
+            }
+        }
+
+        // 페이지 로드 시 자동 테스트
+        window.addEventListener('load', () => {
+            log('🎯 자동 진단을 시작합니다...', 'info');
+            setTimeout(testProxyEndpoint, 1000);
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🔄 캐시 무시 최종 테스트</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gradient-to-br from-purple-600 to-blue-600 min-h-screen p-8">
+    <div class="max-w-2xl mx-auto">
+        <div class="bg-white rounded-xl shadow-2xl p-8">
+            <h1 class="text-3xl font-bold text-center mb-8 text-purple-800">🎤 K-Pop 공연 신청 (캐시 무시 버전)</h1>
+            
+            <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-6">
+                <strong>✅ 최신 업데이트:</strong> 2024.09.30 - 보안 강화 및 캐시 문제 해결
+            </div>
+            
+            <form id="applicationForm" class="space-y-6">
+                <div>
+                    <label class="block text-gray-700 font-semibold mb-2">👤 이름 *</label>
+                    <input type="text" id="name" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent" 
+                           placeholder="성함을 입력하세요" required>
+                </div>
+                
+                <div>
+                    <label class="block text-gray-700 font-semibold mb-2">📱 휴대폰번호 *</label>
+                    <input type="tel" id="phone" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent" 
+                           placeholder="010-1234-5678" pattern="[0-9]{3}-[0-9]{4}-[0-9]{4}" required>
+                </div>
+                
+                <div>
+                    <label class="block text-gray-700 font-semibold mb-2">📧 이메일 *</label>
+                    <input type="email" id="email" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent" 
+                           placeholder="example@email.com" required>
+                </div>
+                
+                <div class="flex items-center">
+                    <input type="checkbox" id="consent" class="mr-3 scale-125" required>
+                    <label for="consent" class="text-sm text-gray-700">
+                        개인정보 수집 및 이용에 동의합니다. *
+                    </label>
+                </div>
+                
+                <button type="submit" id="submitBtn" 
+                        class="w-full bg-gradient-to-r from-purple-600 to-blue-600 text-white font-bold py-4 px-6 rounded-lg hover:from-purple-700 hover:to-blue-700 transform transition duration-200 hover:scale-105 shadow-lg">
+                    🎯 캐시 무시 신청하기 (최신 버전)
+                </button>
+            </form>
+            
+            <div id="status" class="mt-6 p-4 bg-gray-900 text-green-400 rounded-lg font-mono text-sm max-h-64 overflow-y-auto">
+                <div class="text-yellow-400">🔄 캐시 무시 최신 버전 로드 완료 (2024.09.30)</div>
+                <div class="text-blue-400">📡 Functions URL: /.netlify/functions/airtable-proxy</div>
+                <div class="text-purple-400">🚀 브라우저 캐시를 완전 무시하는 최신 코드입니다</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 🔄 캐시 무시 최신 버전 - 2024.09.30
+        const FUNCTIONS_URL = '/.netlify/functions/airtable-proxy';
+        
+        function log(message, type = 'info') {
+            const container = document.getElementById('status');
+            const timestamp = new Date().toLocaleTimeString();
+            const colors = {
+                'error': 'text-red-400',
+                'success': 'text-green-400',
+                'warning': 'text-yellow-400',
+                'info': 'text-blue-400'
+            };
+            
+            container.innerHTML += `<div class="${colors[type] || 'text-green-400'}">[${timestamp}] ${message}</div>`;
+            container.scrollTop = container.scrollHeight;
+        }
+
+        document.getElementById('applicationForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const submitBtn = document.getElementById('submitBtn');
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '🔄 처리중...';
+            
+            // 폼 데이터 수집
+            const formData = {
+                'Name': document.getElementById('name').value,
+                'Phone': document.getElementById('phone').value,
+                'Email': document.getElementById('email').value,
+                'Performance Type': 'K-Pop',
+                'Status': 'Pending',
+                'Submitted At': new Date().toISOString()
+            };
+            
+            log('🚀 캐시 무시 신청 시작...', 'warning');
+            log('📝 전송 데이터: ' + JSON.stringify(formData, null, 2), 'info');
+            log('🔗 사용 URL: ' + FUNCTIONS_URL, 'info');
+            
+            try {
+                // 캐시 무시 헤더 추가
+                const response = await fetch(FUNCTIONS_URL + '?t=' + Date.now(), {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Cache-Control': 'no-cache, no-store, must-revalidate',
+                        'Pragma': 'no-cache',
+                        'Expires': '0'
+                    },
+                    body: JSON.stringify(formData)
+                });
+                
+                log(`📡 응답 상태: ${response.status} ${response.statusText}`, 
+                    response.ok ? 'success' : 'error');
+                
+                if (response.ok) {
+                    const result = await response.json();
+                    log('✅ 신청 성공! 레코드 ID: ' + result.id, 'success');
+                    log('🎉 에어테이블에 데이터가 저장되었습니다!', 'success');
+                    
+                    // 성공 메시지 표시
+                    alert('🎉 신청이 완료되었습니다!\n\n' +
+                          '📧 입력하신 이메일로 확인 메시지가 발송될 예정입니다.\n' +
+                          '🎫 당첨자 발표는 10월 27일(월) 오전 9시에 있을 예정입니다.');
+                    
+                    // 폼 초기화
+                    document.getElementById('applicationForm').reset();
+                    
+                } else {
+                    const errorText = await response.text();
+                    log('❌ 신청 실패: ' + errorText, 'error');
+                    alert('❌ 신청 처리 중 오류가 발생했습니다.\n\n다시 시도해 주세요.');
+                }
+                
+            } catch (error) {
+                log('💥 네트워크 오류: ' + error.message, 'error');
+                alert('💥 네트워크 오류가 발생했습니다.\n\n인터넷 연결을 확인하고 다시 시도해 주세요.');
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '🎯 캐시 무시 신청하기 (최신 버전)';
+            }
+        });
+        
+        // 페이지 로드시 최신 버전임을 알림
+        window.addEventListener('load', () => {
+            log('✅ 최신 버전 로드 완료 - 캐시 무시 기능 적용됨', 'success');
+        });
+    </script>
+</body>
+</html>

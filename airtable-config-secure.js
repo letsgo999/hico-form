@@ -1,50 +1,20 @@
-// Airtable Configuration with Environment Variables Support
-// 네트리파이 환경변수와 로컬 설정을 모두 지원
+// 🔒 보안 강화된 에어테이블 설정 (환경변수 사용)
 
-// 환경변수 또는 기본값 사용 (개선된 버전)
 const AIRTABLE_CONFIG = {
-    // 여러 방법으로 환경변수 시도
-    API_KEY: getEnvVar('AIRTABLE_API_KEY') || 'YOUR_AIRTABLE_API_KEY',
-    BASE_ID: getEnvVar('AIRTABLE_BASE_ID') || 'YOUR_BASE_ID',  
-    TABLE_NAME: getEnvVar('AIRTABLE_TABLE_NAME') || 'APEC_Applications'
+    // 환경변수 사용 (프로덕션 환경)
+    API_KEY: typeof process !== 'undefined' && process.env 
+        ? process.env.AIRTABLE_API_KEY || 'YOUR_AIRTABLE_API_KEY'
+        : 'YOUR_AIRTABLE_API_KEY',
+        
+    BASE_ID: typeof process !== 'undefined' && process.env 
+        ? process.env.AIRTABLE_BASE_ID || 'YOUR_BASE_ID'
+        : 'YOUR_BASE_ID',
+        
+    TABLE_NAME: 'Table 1'  // 테이블명은 공개되어도 안전
 };
 
-// 환경변수 가져오기 함수 (다양한 방법 지원)
-function getEnvVar(name) {
-    // 방법 1: 네트리파이 런타임 환경변수
-    if (typeof window !== 'undefined' && window.ENV && window.ENV[name]) {
-        console.log(`✅ 환경변수 ${name} 발견 (window.ENV)`);
-        return window.ENV[name];
-    }
-    
-    // 방법 2: 네트리파이 빌드 시 주입된 환경변수  
-    if (typeof process !== 'undefined' && process.env && process.env[name]) {
-        console.log(`✅ 환경변수 ${name} 발견 (process.env)`);
-        return process.env[name];
-    }
-    
-    // 방법 3: 수동으로 window에 설정된 값
-    if (typeof window !== 'undefined' && window[name]) {
-        console.log(`✅ 환경변수 ${name} 발견 (window.${name})`);
-        return window[name];
-    }
-    
-    // 방법 4: 로컬 테스트용 설정
-    if (typeof window !== 'undefined' && window.AIRTABLE_LOCAL_CONFIG && window.AIRTABLE_LOCAL_CONFIG[name]) {
-        console.log(`✅ 환경변수 ${name} 발견 (로컬 설정)`);
-        return window.AIRTABLE_LOCAL_CONFIG[name];
-    }
-    
-    console.warn(`⚠️ 환경변수 ${name} 찾을 수 없음`);
-    return null;
-}
-
-// 설정 검증
-console.log('🔧 Airtable Config:', {
-    hasApiKey: !!AIRTABLE_CONFIG.API_KEY && AIRTABLE_CONFIG.API_KEY !== 'YOUR_AIRTABLE_API_KEY',
-    hasBaseId: !!AIRTABLE_CONFIG.BASE_ID && AIRTABLE_CONFIG.BASE_ID !== 'YOUR_BASE_ID',
-    tableName: AIRTABLE_CONFIG.TABLE_NAME
-});
+// 개발/테스트 환경에서는 직접 설정 (로컬에서만 사용)
+// 실제 운영시에는 네트리파이 환경변수 설정 필요
 
 // Airtable API Functions
 class AirtableAPI {
@@ -53,10 +23,19 @@ class AirtableAPI {
         this.baseId = config.BASE_ID;
         this.tableName = config.TABLE_NAME;
         this.baseURL = `https://api.airtable.com/v0/${this.baseId}/${encodeURIComponent(this.tableName)}`;
+        
+        // API 키 검증
+        if (!this.apiKey || this.apiKey === 'YOUR_AIRTABLE_API_KEY') {
+            console.warn('⚠️ Airtable API 키가 설정되지 않았습니다. 환경변수를 확인해주세요.');
+        }
     }
 
     // 새 레코드 생성
     async createRecord(data) {
+        if (!this.apiKey || this.apiKey === 'YOUR_AIRTABLE_API_KEY') {
+            throw new Error('Airtable API 키가 설정되지 않았습니다.');
+        }
+        
         try {
             const response = await fetch(this.baseURL, {
                 method: 'POST',
@@ -86,6 +65,10 @@ class AirtableAPI {
 
     // 모든 레코드 조회
     async getAllRecords(params = {}) {
+        if (!this.apiKey || this.apiKey === 'YOUR_AIRTABLE_API_KEY') {
+            throw new Error('Airtable API 키가 설정되지 않았습니다.');
+        }
+        
         try {
             let url = this.baseURL;
             const queryParams = new URLSearchParams();
@@ -122,6 +105,10 @@ class AirtableAPI {
 
     // 레코드 삭제
     async deleteRecord(recordId) {
+        if (!this.apiKey || this.apiKey === 'YOUR_AIRTABLE_API_KEY') {
+            throw new Error('Airtable API 키가 설정되지 않았습니다.');
+        }
+        
         try {
             const response = await fetch(`${this.baseURL}/${recordId}`, {
                 method: 'DELETE',
@@ -138,33 +125,6 @@ class AirtableAPI {
             return true;
         } catch (error) {
             console.error('Airtable 레코드 삭제 실패:', error);
-            throw error;
-        }
-    }
-
-    // 레코드 업데이트
-    async updateRecord(recordId, data) {
-        try {
-            const response = await fetch(`${this.baseURL}/${recordId}`, {
-                method: 'PATCH',
-                headers: {
-                    'Authorization': `Bearer ${this.apiKey}`,
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    fields: data
-                })
-            });
-
-            if (!response.ok) {
-                const error = await response.json();
-                throw new Error(`Airtable API Error: ${error.error?.message || response.statusText}`);
-            }
-
-            const result = await response.json();
-            return result;
-        } catch (error) {
-            console.error('Airtable 레코드 업데이트 실패:', error);
             throw error;
         }
     }

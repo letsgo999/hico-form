@@ -1,134 +1,106 @@
-// 🔒 보안 강화된 에어테이블 설정 (환경변수 사용)
+// 🔒 보안 에어테이블 설정 (프록시 사용)
+// API 키는 서버사이드에서 안전하게 처리됨
 
-const AIRTABLE_CONFIG = {
-    // 환경변수 사용 (프로덕션 환경)
-    API_KEY: typeof process !== 'undefined' && process.env 
-        ? process.env.AIRTABLE_API_KEY || 'YOUR_AIRTABLE_API_KEY'
-        : 'YOUR_AIRTABLE_API_KEY',
-        
-    BASE_ID: typeof process !== 'undefined' && process.env 
-        ? process.env.AIRTABLE_BASE_ID || 'YOUR_BASE_ID'
-        : 'YOUR_BASE_ID',
-        
-    TABLE_NAME: 'Table 1'  // 테이블명은 공개되어도 안전
-};
+// 보안 프록시 엔드포인트
+const PROXY_ENDPOINT = '/.netlify/functions/airtable-proxy';
 
-// 개발/테스트 환경에서는 직접 설정 (로컬에서만 사용)
-// 실제 운영시에는 네트리파이 환경변수 설정 필요
+console.log('🔧 보안 Airtable 설정 로드됨');
+console.log('- 프록시 엔드포인트:', PROXY_ENDPOINT);
+console.log('- 보안 처리: API 키는 서버사이드에서 안전하게 관리됨');
 
-// Airtable API Functions
-class AirtableAPI {
-    constructor(config) {
-        this.apiKey = config.API_KEY;
-        this.baseId = config.BASE_ID;
-        this.tableName = config.TABLE_NAME;
-        this.baseURL = `https://api.airtable.com/v0/${this.baseId}/${encodeURIComponent(this.tableName)}`;
-        
-        // API 키 검증
-        if (!this.apiKey || this.apiKey === 'YOUR_AIRTABLE_API_KEY') {
-            console.warn('⚠️ Airtable API 키가 설정되지 않았습니다. 환경변수를 확인해주세요.');
-        }
+// 🔒 보안 Airtable API 클래스 (프록시 사용)
+class SecureAirtableAPI {
+    constructor() {
+        this.proxyURL = PROXY_ENDPOINT;
+        console.log('🔒 보안 Airtable API 초기화:', this.proxyURL);
     }
 
-    // 새 레코드 생성
+    // 새 레코드 생성 (보안 프록시 사용)
     async createRecord(data) {
-        if (!this.apiKey || this.apiKey === 'YOUR_AIRTABLE_API_KEY') {
-            throw new Error('Airtable API 키가 설정되지 않았습니다.');
-        }
+        console.log('📝 보안 레코드 생성 시도:', data);
         
         try {
-            const response = await fetch(this.baseURL, {
+            const response = await fetch(this.proxyURL, {
                 method: 'POST',
                 headers: {
-                    'Authorization': `Bearer ${this.apiKey}`,
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({
-                    records: [{
-                        fields: data
-                    }]
-                })
+                body: JSON.stringify(data)
             });
 
+            console.log('📡 프록시 응답 상태:', response.status);
+
             if (!response.ok) {
-                const error = await response.json();
-                throw new Error(`Airtable API Error: ${error.error?.message || response.statusText}`);
+                const errorData = await response.json();
+                console.error('❌ 프록시 에러:', errorData);
+                throw new Error(`Proxy Error (${response.status}): ${errorData.error || 'Unknown error'}`);
             }
 
             const result = await response.json();
-            return result.records[0];
+            console.log('✅ 보안 저장 성공:', result);
+            return result;
         } catch (error) {
-            console.error('Airtable 레코드 생성 실패:', error);
+            console.error('❌ 보안 API 에러 상세:', error);
             throw error;
         }
     }
 
-    // 모든 레코드 조회
+    // 모든 레코드 조회 (보안 프록시 사용)
     async getAllRecords(params = {}) {
-        if (!this.apiKey || this.apiKey === 'YOUR_AIRTABLE_API_KEY') {
-            throw new Error('Airtable API 키가 설정되지 않았습니다.');
-        }
+        console.log('📊 보안 레코드 조회 시도');
         
         try {
-            let url = this.baseURL;
-            const queryParams = new URLSearchParams();
-            
-            // 정렬 설정 (최신순)
-            queryParams.append('sort[0][field]', 'Submitted At');
-            queryParams.append('sort[0][direction]', 'desc');
-            
-            // 최대 레코드 수
-            queryParams.append('maxRecords', params.maxRecords || '100');
-            
-            if (queryParams.toString()) {
-                url += '?' + queryParams.toString();
-            }
-
-            const response = await fetch(url, {
+            const response = await fetch(this.proxyURL, {
+                method: 'GET',
                 headers: {
-                    'Authorization': `Bearer ${this.apiKey}`
+                    'Content-Type': 'application/json'
                 }
             });
 
             if (!response.ok) {
-                const error = await response.json();
-                throw new Error(`Airtable API Error: ${error.error?.message || response.statusText}`);
+                const errorData = await response.json();
+                console.error('❌ 조회 프록시 에러:', errorData);
+                throw new Error(`Proxy Error (${response.status}): ${errorData.error || 'Unknown error'}`);
             }
 
-            const result = await response.json();
-            return result.records;
+            const records = await response.json();
+            console.log('✅ 보안 조회 성공:', records.length, '개 레코드');
+            return records;
         } catch (error) {
-            console.error('Airtable 레코드 조회 실패:', error);
-            throw error;
-        }
-    }
-
-    // 레코드 삭제
-    async deleteRecord(recordId) {
-        if (!this.apiKey || this.apiKey === 'YOUR_AIRTABLE_API_KEY') {
-            throw new Error('Airtable API 키가 설정되지 않았습니다.');
-        }
-        
-        try {
-            const response = await fetch(`${this.baseURL}/${recordId}`, {
-                method: 'DELETE',
-                headers: {
-                    'Authorization': `Bearer ${this.apiKey}`
-                }
-            });
-
-            if (!response.ok) {
-                const error = await response.json();
-                throw new Error(`Airtable API Error: ${error.error?.message || response.statusText}`);
-            }
-
-            return true;
-        } catch (error) {
-            console.error('Airtable 레코드 삭제 실패:', error);
+            console.error('❌ 보안 조회 에러:', error);
             throw error;
         }
     }
 }
 
-// 전역 인스턴스 생성
-window.airtableAPI = new AirtableAPI(AIRTABLE_CONFIG);
+// 전역 인스턴스 생성 (보안 버전)
+window.airtableAPI = new SecureAirtableAPI();
+
+// 보안 테스트 함수
+window.testAirtable = async function() {
+    console.log('🧪 보안 Airtable 연결 테스트 시작...');
+    
+    try {
+        // 기존 레코드 조회 테스트
+        const records = await window.airtableAPI.getAllRecords();
+        console.log('✅ 보안 조회 테스트 성공');
+        
+        // 새 레코드 생성 테스트
+        const testData = {
+            'Name': '보안테스트사용자_' + Date.now(),
+            'Phone': '010-1234-5678',
+            'Email': 'securetest@example.com',
+            'Performance Type': 'Traditional',
+            'Status': 'Pending',
+            'Submitted At': new Date().toISOString()
+        };
+        
+        const newRecord = await window.airtableAPI.createRecord(testData);
+        console.log('✅ 보안 생성 테스트 성공:', newRecord.id);
+        
+        alert('🎉 보안 Airtable 연결 테스트 성공! API 키는 안전하게 보호됩니다.');
+    } catch (error) {
+        console.error('❌ 보안 테스트 실패:', error);
+        alert('❌ 보안 테스트 실패: ' + error.message);
+    }
+};

@@ -65,6 +65,11 @@ APEC 정상회의 기간(2025년 10월 27일 - 11월 1일) 중 HICO에서 개최
 - **Font Awesome**: 아이콘 라이브러리
 - **Google Fonts**: Noto Sans KR, Inter 폰트
 
+### Backend & Security
+- **Netlify Functions**: 서버리스 백엔드 프록시
+- **Airtable API**: 데이터베이스 연동
+- **보안 아키텍처**: API 키 서버사이드 보호
+
 ### 외부 라이브러리 (CDN)
 ```html
 <!-- Tailwind CSS -->
@@ -81,14 +86,20 @@ APEC 정상회의 기간(2025년 10월 27일 - 11월 1일) 중 HICO에서 개최
 
 ```
 apec-cultural-events/
-├── index.html              # 메인 랜딩페이지
-├── traditional-dance.html  # 한국 전통무용 신청 페이지
-├── kpop-concert.html      # K-Pop 아이돌 공연 신청 페이지
+├── index.html                     # 메인 랜딩페이지
+├── traditional-dance.html         # 한국 전통무용 신청 페이지 (보안 업데이트됨)
+├── kpop-concert.html             # K-Pop 아이돌 공연 신청 페이지 (보안 업데이트됨)
+├── admin-dashboard.html          # 실시간 관리자 대시보드 (보안 업데이트됨)
+├── netlify/
+│   └── functions/
+│       └── airtable-proxy.js     # 🔒 보안 프록시 함수 (API 키 보호)
+├── airtable-config-secure.js     # 🔒 보안 Airtable 설정
 ├── js/
-│   └── main.js            # 메인 JavaScript 로직 (레거시)
+│   └── main.js                   # 메인 JavaScript 로직 (레거시)
 ├── images/
-│   └── hico-building.jpg  # HICO 건물 배경 이미지
-└── README.md              # 프로젝트 문서
+│   └── hico-building.jpg         # HICO 건물 배경 이미지
+├── AIRTABLE_SETUP_GUIDE.md       # Airtable 설정 가이드
+└── README.md                     # 프로젝트 문서
 ```
 
 ## 🔗 기능별 진입점
@@ -148,11 +159,12 @@ apec-cultural-events/
 
 ## 🔮 미구현 기능 및 향후 계획
 
-### 백엔드 연동 (추후 구현 예정)
-- [ ] 실제 데이터베이스 연동 (MySQL/PostgreSQL)
-- [ ] 서버사이드 API 엔드포인트 구축
+### 보안 및 데이터 관리 (구현 완료)
+- [x] **보안 프록시**: Netlify Functions를 통한 API 키 보호
+- [x] **Airtable 연동**: 안전한 데이터베이스 연돐
+- [x] **실시간 대시보드**: 관리자용 통계 및 데이터 처리
+- [x] **이중 안전성**: 서버 + 로컬 데이터 백업
 - [ ] 이메일 알림 시스템 (당첨 발표, 확인 메일)
-- [ ] 관리자 대시보드 (신청 현황, 당첨자 관리)
 
 ### 추가 기능 (Enhancement)
 - [ ] 다국어 지원 (영어, 중국어, 일본어)
@@ -171,12 +183,22 @@ apec-cultural-events/
 ## 🛠️ 개발 및 배포 가이드
 
 ### 로컬 개발
-1. 프로젝트 파일을 웹서버에 배치
-2. `index.html` 파일을 브라우저에서 열기
-3. 개발자 도구 콘솔에서 `apecEvents` 객체로 디버깅 가능
+1. **환경변수 설정**: Netlify 대시보드에서 Airtable API 키 설정
+   ```
+   AIRTABLE_API_KEY=pat...
+   AIRTABLE_BASE_ID=app...
+   AIRTABLE_TABLE_NAME=APEC_Applications
+   ```
+2. **로컬 테스트**: Netlify Dev CLI로 로컬 서버 실행
+3. **디버깅**: 브라우저 콘솔에서 보안 API 통신 확인 가능
 
 ### 배포 방법
 **웹사이트 배포**: Publish 탭을 사용하여 원클릭 배포 가능
+
+**보안 설정**:
+1. Netlify 대시보드에서 환경변수 설정
+2. 보안 프록시 함수 자동 배포
+3. HTTPS 암호화 통신 자동 적용
 
 ### 브라우저 호환성
 - Chrome 80+
@@ -215,5 +237,41 @@ apec-cultural-events/
 - **전통무용 공연**: 10월 29일 (수) 19:00
 - **K-Pop 공연**: 10월 30일 (목) 20:00
 - **행사 기간**: 10월 27일 (월) - 11월 1일 (토)
+
+## 🔒 보안 아키텍처
+
+### 보안 강화 사항 (2024.09.30 업데이트)
+
+#### ✅ API 키 보안 처리
+- **문제**: HTML 파일에 Airtable API 키 직접 노출 (보안 취약점)
+- **해결**: Netlify Functions 프록시를 통한 서버사이드 API 키 보호
+- **효과**: GitHub를 통한 API 키 노출 완전 차단
+
+#### 🛡️ 보안 프록시 시스템
+```javascript
+// 클라이언트 사이드 (안전)
+const response = await fetch('/.netlify/functions/airtable-proxy', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data)
+});
+
+// 서버 사이드에서 안전하게 API 키 처리
+const AIRTABLE_API_KEY = process.env.AIRTABLE_API_KEY; // 환경변수
+```
+
+#### 🔧 환경변수 설정 (Netlify 배포 시 필수)
+```env
+AIRTABLE_API_KEY=pat1234567890abcdef  # pat로 시작하는 실제 API 키
+AIRTABLE_BASE_ID=app1234567890abcdef  # app로 시작하는 실제 Base ID
+AIRTABLE_TABLE_NAME=APEC_Applications  # 테이블명
+```
+
+#### 📋 보안 검증 완료 사항
+- [x] HTML 페이지에서 API 키 노출 완전 제거
+- [x] 보안 프록시 함수 구현 및 테스트
+- [x] 모든 API 호출을 보안 엔드포인트로 전환
+- [x] 환경변수를 통한 안전한 설정 관리
+- [x] CORS 및 에러 핸들링 구현
 
 **© 2025 APEC Summit Korea. All rights reserved.**

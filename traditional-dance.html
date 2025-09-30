@@ -15,8 +15,96 @@
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
     
-    <!-- Airtable API -->
-    <script src="airtable-config-direct.js"></script>
+    <!-- Airtable API (인라인) -->
+    <script>
+        // 🔒 보안 프록시 엔드포인트 사용 (API 키는 서버사이드에서 안전하게 처리)
+        const PROXY_ENDPOINT = '/.netlify/functions/airtable-proxy';
+
+        // 🔒 보안 Airtable API 클래스 (프록시 사용)
+        class SecureAirtableAPI {
+            constructor() {
+                this.proxyURL = PROXY_ENDPOINT;
+                console.log('🔒 보안 Airtable API 초기화');
+                console.log('- 프록시 엔드포인트:', this.proxyURL);
+            }
+
+            async createRecord(data) {
+                console.log('📝 보안 레코드 생성 시도:', data);
+                
+                try {
+                    const response = await fetch(this.proxyURL, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(data)
+                    });
+
+                    console.log('📡 프록시 응답 상태:', response.status, response.statusText);
+
+                    if (!response.ok) {
+                        const errorData = await response.json();
+                        console.error('❌ 프록시 에러:', errorData);
+                        throw new Error(`Proxy Error (${response.status}): ${errorData.error || 'Unknown error'}`);
+                    }
+
+                    const result = await response.json();
+                    console.log('✅ 보안 저장 성공:', result);
+                    return result;
+                } catch (error) {
+                    console.error('❌ 보안 API 에러:', error);
+                    throw error;
+                }
+            }
+
+            async getAllRecords(params = {}) {
+                try {
+                    const response = await fetch(this.proxyURL, {
+                        method: 'GET',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        }
+                    });
+
+                    if (!response.ok) {
+                        const errorData = await response.json();
+                        throw new Error(`Proxy Error (${response.status}): ${errorData.error || 'Unknown error'}`);
+                    }
+
+                    const records = await response.json();
+                    return records;
+                } catch (error) {
+                    console.error('❌ 보안 레코드 조회 에러:', error);
+                    throw error;
+                }
+            }
+        }
+
+        // 🔒 보안 전역 인스턴스 생성
+        window.airtableAPI = new SecureAirtableAPI();
+        
+        // 테스트 함수
+        window.testAirtableConnection = async function() {
+            console.log('🧪 Airtable 연결 테스트...');
+            try {
+                const testData = {
+                    'Name': '연결테스트_' + Date.now(),
+                    'Phone': '010-0000-0000',
+                    'Email': 'test@example.com',
+                    'Performance Type': 'Traditional',
+                    'Status': 'Pending',
+                    'Submitted At': new Date().toISOString()
+                };
+                
+                const result = await window.airtableAPI.createRecord(testData);
+                console.log('✅ 연결 테스트 성공!', result);
+                alert('🎉 에어테이블 연결 성공!');
+            } catch (error) {
+                console.error('❌ 연결 테스트 실패:', error);
+                alert('❌ 연결 실패: ' + error.message);
+            }
+        };
+    </script>
     
     <style>
         body {

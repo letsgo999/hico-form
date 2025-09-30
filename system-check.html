@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🔧 시스템 진단</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 p-8">
+    <div class="max-w-4xl mx-auto">
+        <h1 class="text-3xl font-bold mb-8 text-center">🔧 APEC 시스템 진단</h1>
+        
+        <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+            <h2 class="text-xl font-semibold mb-4">📊 배포 상태 확인</h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                <button onclick="checkFunctionEndpoint()" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
+                    🔗 Functions 엔드포인트 체크
+                </button>
+                <button onclick="checkAlternativePaths()" class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">
+                    📁 다른 경로들 테스트
+                </button>
+                <button onclick="checkDeployInfo()" class="bg-purple-500 text-white px-4 py-2 rounded hover:bg-purple-600">
+                    🚀 배포 정보 확인
+                </button>
+                <button onclick="clearLogs()" class="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600">
+                    🧹 로그 지우기
+                </button>
+            </div>
+            
+            <div class="mb-4">
+                <h3 class="text-lg font-semibold mb-2">⚡ 빠른 테스트</h3>
+                <button onclick="runFullDiagnostic()" class="bg-red-500 text-white px-6 py-3 rounded hover:bg-red-600 text-lg">
+                    🎯 전체 진단 실행
+                </button>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-lg p-6">
+            <h2 class="text-xl font-semibold mb-4">📋 진단 로그</h2>
+            <div id="logContainer" class="bg-gray-900 text-green-400 p-4 rounded font-mono text-sm h-96 overflow-y-auto">
+                <div class="text-yellow-400">🚀 APEC 시스템 진단 준비 완료...</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function log(message, type = 'info') {
+            const container = document.getElementById('logContainer');
+            const timestamp = new Date().toLocaleTimeString();
+            const colors = {
+                'error': 'text-red-400',
+                'success': 'text-green-400',
+                'warning': 'text-yellow-400',
+                'info': 'text-blue-400'
+            };
+            
+            container.innerHTML += `<div class="${colors[type] || 'text-green-400'}">[${timestamp}] ${message}</div>`;
+            container.scrollTop = container.scrollHeight;
+        }
+
+        function clearLogs() {
+            document.getElementById('logContainer').innerHTML = '<div class="text-yellow-400">🧹 로그가 지워졌습니다.</div>';
+        }
+
+        async function checkFunctionEndpoint() {
+            log('🔗 Functions 엔드포인트 상세 체크 시작...', 'info');
+            
+            const paths = [
+                '/.netlify/functions/airtable-proxy',
+                '/netlify/functions/airtable-proxy', 
+                '/.netlify/functions/airtable-proxy/',
+                '/functions/airtable-proxy'
+            ];
+            
+            for (const path of paths) {
+                try {
+                    log(`📡 테스트 경로: ${path}`, 'info');
+                    
+                    const response = await fetch(path, {
+                        method: 'OPTIONS'
+                    });
+                    
+                    log(`   응답: ${response.status} ${response.statusText}`, 
+                        response.status === 200 ? 'success' : 'warning');
+                        
+                } catch (error) {
+                    log(`   에러: ${error.message}`, 'error');
+                }
+            }
+        }
+
+        async function checkAlternativePaths() {
+            log('📁 대체 경로 테스트 시작...', 'info');
+            
+            const testPaths = [
+                '/api/airtable',
+                '/functions/proxy',
+                '/.netlify/functions/',
+                '/netlify/functions/',
+                '/_functions/airtable-proxy'
+            ];
+            
+            for (const path of testPaths) {
+                try {
+                    const response = await fetch(path);
+                    log(`📂 ${path} → ${response.status}`, 
+                        response.status < 500 ? 'success' : 'warning');
+                } catch (error) {
+                    log(`📂 ${path} → 접근 불가`, 'error');
+                }
+            }
+        }
+
+        async function checkDeployInfo() {
+            log('🚀 배포 환경 정보 수집...', 'info');
+            
+            // 현재 URL 정보
+            log(`🌐 현재 도메인: ${window.location.hostname}`, 'info');
+            log(`📍 현재 경로: ${window.location.pathname}`, 'info');
+            log(`🔗 현재 전체 URL: ${window.location.href}`, 'info');
+            
+            // 브라우저 정보
+            log(`💻 User Agent: ${navigator.userAgent}`, 'info');
+            
+            // 네트워크 상태 확인
+            try {
+                const response = await fetch('/');
+                log(`🏠 메인 페이지 응답: ${response.status}`, 'success');
+                
+                // 응답 헤더 확인
+                const server = response.headers.get('server');
+                if (server) {
+                    log(`🖥️ 서버 정보: ${server}`, 'info');
+                }
+                
+            } catch (error) {
+                log(`❌ 메인 페이지 접근 실패: ${error.message}`, 'error');
+            }
+        }
+
+        async function runFullDiagnostic() {
+            log('🎯 전체 진단 시작...', 'warning');
+            log('=' .repeat(50), 'info');
+            
+            await checkDeployInfo();
+            log('-'.repeat(30), 'info');
+            
+            await checkFunctionEndpoint();
+            log('-'.repeat(30), 'info');
+            
+            await checkAlternativePaths();
+            log('-'.repeat(30), 'info');
+            
+            log('✅ 전체 진단 완료!', 'success');
+            log('💡 위 결과를 개발팀에 공유하여 문제를 해결하세요.', 'warning');
+        }
+
+        // 페이지 로드 시 기본 정보 표시
+        window.addEventListener('load', () => {
+            log('📍 시스템 진단 페이지 로드 완료', 'success');
+            log('🔧 진단 버튼을 클릭하여 시스템 상태를 확인하세요.', 'info');
+        });
+    </script>
+</body>
+</html>

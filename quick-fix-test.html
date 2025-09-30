@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🚀 긴급 테스트</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 p-8">
+    <div class="max-w-2xl mx-auto">
+        <h1 class="text-2xl font-bold mb-6">🚀 K-Pop 공연 신청 (긴급 테스트)</h1>
+        
+        <form id="testForm" class="bg-white p-6 rounded-lg shadow-lg">
+            <div class="mb-4">
+                <label class="block text-gray-700 text-sm font-bold mb-2">이름</label>
+                <input type="text" id="name" class="w-full px-3 py-2 border rounded-lg" value="긴급테스트사용자" required>
+            </div>
+            
+            <div class="mb-4">
+                <label class="block text-gray-700 text-sm font-bold mb-2">전화번호</label>
+                <input type="tel" id="phone" class="w-full px-3 py-2 border rounded-lg" value="010-5555-7777" required>
+            </div>
+            
+            <div class="mb-4">
+                <label class="block text-gray-700 text-sm font-bold mb-2">이메일</label>
+                <input type="email" id="email" class="w-full px-3 py-2 border rounded-lg" value="emergency@test.com" required>
+            </div>
+            
+            <button type="submit" class="w-full bg-blue-500 text-white py-2 px-4 rounded-lg hover:bg-blue-600">
+                🎯 긴급 테스트 신청
+            </button>
+        </form>
+        
+        <div id="result" class="mt-6 p-4 bg-gray-800 text-green-400 rounded font-mono text-sm h-64 overflow-y-auto">
+            <div>🚀 긴급 테스트 준비 완료...</div>
+        </div>
+    </div>
+
+    <script>
+        function log(message, type = 'info') {
+            const container = document.getElementById('result');
+            const timestamp = new Date().toLocaleTimeString();
+            const colors = {
+                'error': 'text-red-400',
+                'success': 'text-green-400', 
+                'warning': 'text-yellow-400',
+                'info': 'text-blue-400'
+            };
+            
+            container.innerHTML += `<div class="${colors[type] || 'text-green-400'}">[${timestamp}] ${message}</div>`;
+            container.scrollTop = container.scrollHeight;
+        }
+
+        document.getElementById('testForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const data = {
+                'Name': document.getElementById('name').value,
+                'Phone': document.getElementById('phone').value,
+                'Email': document.getElementById('email').value,
+                'Performance Type': 'K-Pop',
+                'Status': 'Pending',
+                'Submitted At': new Date().toISOString()
+            };
+            
+            log('🎯 긴급 테스트 시작...', 'warning');
+            log('📝 전송 데이터: ' + JSON.stringify(data, null, 2), 'info');
+            
+            // 여러 경로 시도
+            const urls = [
+                '/.netlify/functions/airtable-proxy',
+                '/.netlify/functions/airtable-proxy/',
+                '/netlify/functions/airtable-proxy'
+            ];
+            
+            for (const url of urls) {
+                try {
+                    log('📡 시도 URL: ' + url, 'info');
+                    
+                    const response = await fetch(url, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(data)
+                    });
+                    
+                    log(`   응답: ${response.status} ${response.statusText}`, 
+                        response.ok ? 'success' : 'warning');
+                    
+                    if (response.ok) {
+                        const result = await response.json();
+                        log('✅ 성공! 레코드 ID: ' + result.id, 'success');
+                        log('🎉 에어테이블에 데이터가 저장되었습니다!', 'success');
+                        return;
+                    } else {
+                        const error = await response.text();
+                        log('   에러 내용: ' + error, 'error');
+                    }
+                    
+                } catch (error) {
+                    log('   예외 발생: ' + error.message, 'error');
+                }
+            }
+            
+            log('❌ 모든 URL에서 실패했습니다.', 'error');
+        });
+    </script>
+</body>
+</html>

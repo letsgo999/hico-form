@@ -1,10 +1,15 @@
 [build]
+  command = "echo 'Building APEC site...'"
   functions = "netlify/functions"
   publish = "."
 
 [functions]
   # Functions 디렉토리 설정
   directory = "netlify/functions"
+  
+# Functions 개별 설정
+[functions."airtable-proxy"]
+  included_files = ["netlify/functions/airtable-proxy.js"]
 
 [[headers]]
   # CORS 헤더 설정 (모든 페이지)

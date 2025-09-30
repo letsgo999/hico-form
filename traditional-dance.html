@@ -30,8 +30,11 @@
 
             async createRecord(data) {
                 console.log('📝 보안 레코드 생성 시도:', data);
+                console.log('🔗 사용할 프록시 URL:', this.proxyURL);
+                console.log('🌐 현재 도메인:', window.location.hostname);
                 
                 try {
+                    console.log('📤 요청 시작...');
                     const response = await fetch(this.proxyURL, {
                         method: 'POST',
                         headers: {
@@ -41,6 +44,7 @@
                     });
 
                     console.log('📡 프록시 응답 상태:', response.status, response.statusText);
+                    console.log('📡 응답 URL:', response.url);
 
                     if (!response.ok) {
                         const errorData = await response.json();

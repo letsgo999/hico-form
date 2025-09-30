@@ -15,6 +15,9 @@
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
     
+    <!-- Airtable API -->
+    <script src="airtable-config.js"></script>
+    
     <style>
         body {
             font-family: 'Noto Sans KR', 'Inter', sans-serif;
@@ -356,39 +359,27 @@
             submitBtn.disabled = true;
             
             try {
-                // Prepare data for API
-                const applicationData = {
-                    name: data.name,
-                    phone: data.phone,
-                    email: data.email,
-                    performance_type: 'kpop',
-                    status: 'pending',
-                    submitted_at: new Date().toISOString()
+                // Prepare data for Airtable
+                const airtableData = {
+                    'Name': data.name,
+                    'Phone': data.phone,
+                    'Email': data.email,
+                    'Performance Type': 'K-Pop',
+                    'Status': 'Pending',
+                    'Submitted At': new Date().toISOString()
                 };
                 
-                // Send to RESTful API
-                const response = await fetch('tables/apec_applications', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(applicationData)
-                });
+                // Send to Airtable
+                const airtableResult = await window.airtableAPI.createRecord(airtableData);
                 
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-                
-                const result = await response.json();
-                
-                // Also store in localStorage for backward compatibility
+                // Also store in localStorage for backup
                 const localData = {
-                    id: result.id,
+                    id: airtableResult.id,
                     name: data.name,
                     phone: data.phone,
                     email: data.email,
                     performanceType: 'kpop',
-                    submittedAt: result.created_at,
+                    submittedAt: airtableResult.createdTime,
                     status: 'pending'
                 };
                 storeRegistration(localData);

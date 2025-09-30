@@ -15,6 +15,9 @@
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
     
+    <!-- Airtable API -->
+    <script src="airtable-config.js"></script>
+    
     <style>
         body {
             font-family: 'Noto Sans KR', 'Inter', sans-serif;
@@ -337,39 +340,27 @@
             submitBtn.disabled = true;
             
             try {
-                // Prepare data for API
-                const applicationData = {
-                    name: data.name,
-                    phone: data.phone,
-                    email: data.email,
-                    performance_type: 'traditional',
-                    status: 'pending',
-                    submitted_at: new Date().toISOString()
+                // Prepare data for Airtable
+                const airtableData = {
+                    'Name': data.name,
+                    'Phone': data.phone,
+                    'Email': data.email,
+                    'Performance Type': 'Traditional',
+                    'Status': 'Pending',
+                    'Submitted At': new Date().toISOString()
                 };
                 
-                // Send to RESTful API
-                const response = await fetch('tables/apec_applications', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(applicationData)
-                });
+                // Send to Airtable
+                const airtableResult = await window.airtableAPI.createRecord(airtableData);
                 
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-                
-                const result = await response.json();
-                
-                // Also store in localStorage for backward compatibility
+                // Also store in localStorage for backup
                 const localData = {
-                    id: result.id,
+                    id: airtableResult.id,
                     name: data.name,
                     phone: data.phone,
                     email: data.email,
                     performanceType: 'traditional',
-                    submittedAt: result.created_at,
+                    submittedAt: airtableResult.createdTime,
                     status: 'pending'
                 };
                 storeRegistration(localData);
@@ -387,7 +378,7 @@
             } catch (error) {
                 console.error('신청 처리 중 오류:', error);
                 
-                // Fallback to localStorage on API error
+                // Fallback to localStorage on Airtable error
                 const fallbackData = {
                     id: generateUUID(),
                     name: data.name,
@@ -399,9 +390,20 @@
                 };
                 storeRegistration(fallbackData);
                 
-                // Show success message anyway
+                // Show success message with warning
                 document.getElementById('registrationForm').style.display = 'none';
                 document.getElementById('successMessage').classList.add('show');
+                
+                // Add warning to success message
+                const warningText = document.createElement('div');
+                warningText.className = 'bg-yellow-50 border border-yellow-200 rounded-lg p-3 mt-4';
+                warningText.innerHTML = `
+                    <p class="text-sm text-yellow-800">
+                        <i class="fas fa-exclamation-triangle mr-2"></i>
+                        신청이 접수되었지만 서버 연결에 문제가 있을 수 있습니다. 관리자에게 문의해주세요.
+                    </p>
+                `;
+                document.getElementById('successMessage').appendChild(warningText);
                 
                 document.getElementById('successMessage').scrollIntoView({
                     behavior: 'smooth',

@@ -18,6 +18,9 @@
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     
+    <!-- Airtable API -->
+    <script src="airtable-config.js"></script>
+    
     <style>
         body {
             font-family: 'Noto Sans KR', 'Inter', sans-serif;
@@ -301,39 +304,44 @@
             }, 30000);
         });
 
-        // Load registration data from API
+        // Load registration data from Airtable
         async function loadData() {
             showLoading();
             
             try {
-                // Fetch data from RESTful API
-                const response = await fetch('tables/apec_applications?limit=1000&sort=created_at');
+                // Fetch data from Airtable
+                const airtableRecords = await window.airtableAPI.getAllRecords({ maxRecords: 1000 });
                 
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-                
-                const result = await response.json();
-                
-                // Convert API data format to match existing format
-                registrations = result.data.map(item => ({
-                    id: item.id,
-                    name: item.name,
-                    phone: item.phone,
-                    email: item.email,
-                    performanceType: item.performance_type,
-                    submittedAt: item.created_at || item.submitted_at,
-                    status: item.status || 'pending'
+                // Convert Airtable data format to match existing format
+                registrations = airtableRecords.map(record => ({
+                    id: record.id,
+                    name: record.fields['Name'] || '',
+                    phone: record.fields['Phone'] || '',
+                    email: record.fields['Email'] || '',
+                    performanceType: record.fields['Performance Type'] === 'Traditional' ? 'traditional' : 'kpop',
+                    submittedAt: record.fields['Submitted At'] || record.createdTime,
+                    status: (record.fields['Status'] || 'Pending').toLowerCase(),
+                    createdTime: record.createdTime
                 }));
                 
-                // Also merge with localStorage data (for backward compatibility)
+                // Also merge with localStorage data (for backup/offline data)
                 const localData = JSON.parse(localStorage.getItem('apec_registrations') || '[]');
                 
                 // Remove duplicates and merge
                 const allData = [...registrations];
                 localData.forEach(localItem => {
-                    if (!allData.find(item => item.id === localItem.id || (item.email === localItem.email && item.name === localItem.name))) {
-                        allData.push(localItem);
+                    // Check if this record already exists in Airtable data
+                    const exists = allData.find(item => 
+                        item.id === localItem.id || 
+                        (item.email === localItem.email && item.name === localItem.name)
+                    );
+                    
+                    if (!exists) {
+                        // Add local data with a flag
+                        allData.push({
+                            ...localItem,
+                            isLocalOnly: true
+                        });
                     }
                 });
                 
@@ -344,8 +352,11 @@
                 updateChart();
                 renderTable();
                 
+                // Show success message
+                showDataLoadSuccess('Airtable');
+                
             } catch (error) {
-                console.error('API 데이터 로드 실패, localStorage 사용:', error);
+                console.error('Airtable 데이터 로드 실패, localStorage 사용:', error);
                 
                 // Fallback to localStorage
                 registrations = JSON.parse(localStorage.getItem('apec_registrations') || '[]');
@@ -356,22 +367,25 @@
                 renderTable();
                 
                 // Show warning message
-                showApiErrorMessage();
+                showApiErrorMessage('Airtable');
             }
             
             hideLoading();
         }
         
         // Show API error message
-        function showApiErrorMessage() {
+        function showApiErrorMessage(apiType = 'API') {
             const warningDiv = document.createElement('div');
             warningDiv.className = 'fixed top-4 right-4 bg-yellow-50 border border-yellow-200 rounded-lg p-4 shadow-lg z-50';
             warningDiv.innerHTML = `
                 <div class="flex items-start">
                     <i class="fas fa-exclamation-triangle text-yellow-500 mr-3 mt-1"></i>
                     <div>
-                        <h4 class="font-semibold text-yellow-800">API 연결 실패</h4>
-                        <p class="text-yellow-700 text-sm">서버 데이터를 불러올 수 없어 로컬 데이터를 표시합니다.</p>
+                        <h4 class="font-semibold text-yellow-800">${apiType} 연결 실패</h4>
+                        <p class="text-yellow-700 text-sm">
+                            ${apiType === 'Airtable' ? 'Airtable' : '서버'} 데이터를 불러올 수 없어 로컬 데이터를 표시합니다.
+                            ${apiType === 'Airtable' ? 'API 키 설정을 확인해주세요.' : ''}
+                        </p>
                     </div>
                     <button onclick="this.parentElement.parentElement.remove()" class="ml-4 text-yellow-400 hover:text-yellow-600">
                         <i class="fas fa-times"></i>
@@ -387,6 +401,29 @@
                     warningDiv.remove();
                 }
             }, 10000);
+        }
+        
+        // Show data load success message
+        function showDataLoadSuccess(source) {
+            const successDiv = document.createElement('div');
+            successDiv.className = 'fixed top-4 right-4 bg-green-50 border border-green-200 rounded-lg p-4 shadow-lg z-50';
+            successDiv.innerHTML = `
+                <div class="flex items-center">
+                    <i class="fas fa-check-circle text-green-500 mr-3"></i>
+                    <div>
+                        <h4 class="font-semibold text-green-800">${source} 연결 성공</h4>
+                        <p class="text-green-700 text-sm">최신 데이터를 불러왔습니다.</p>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(successDiv);
+            
+            setTimeout(() => {
+                if (document.body.contains(successDiv)) {
+                    successDiv.remove();
+                }
+            }, 3000);
         }
 
         // Update statistics
@@ -495,7 +532,10 @@
                         ${formatDateTime(reg.submittedAt)}
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap">
-                        <span class="badge badge-pending">대기중</span>
+                        <span class="badge ${getStatusBadgeClass(reg.status)}">
+                            ${getStatusText(reg.status)}
+                            ${reg.isLocalOnly ? ' (로컬)' : ''}
+                        </span>
                     </td>
                 </tr>
             `).join('');
@@ -680,6 +720,26 @@
                 second: '2-digit'
             });
             document.getElementById('lastUpdate').textContent = timeString;
+        }
+        
+        // Get status badge class
+        function getStatusBadgeClass(status) {
+            switch(status?.toLowerCase()) {
+                case 'approved': return 'bg-green-100 text-green-800';
+                case 'rejected': return 'bg-red-100 text-red-800';
+                case 'pending':
+                default: return 'badge-pending';
+            }
+        }
+        
+        // Get status text
+        function getStatusText(status) {
+            switch(status?.toLowerCase()) {
+                case 'approved': return '승인됨';
+                case 'rejected': return '거절됨';
+                case 'pending':
+                default: return '대기중';
+            }
         }
     </script>
 </body>
